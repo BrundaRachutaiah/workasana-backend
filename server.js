@@ -10,7 +10,7 @@ const app = express();
 // Middleware
 const defaultAllowedOrigins = [
   "http://localhost:5173",
-  "https://your-frontend-url.vercel.app",
+  "https://workasana-frontend-six.vercel.app",
 ];
 
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
