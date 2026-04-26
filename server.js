@@ -4,8 +4,10 @@ const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const connectDB = require("./config/db");
+const mongoose = require("mongoose");
 
 const app = express();
+const BUILD_ID = "2026-04-23-task-next-fix";
 
 // Middleware
 const defaultAllowedOrigins = [
@@ -50,6 +52,19 @@ app.use("/users",   require("./routes/userRoutes"));
 
 // Health check
 app.get("/", (req, res) => res.send("Workasana API is running..."));
+app.get("/__health", (req, res) => {
+  res.json({
+    ok: true,
+    buildId: BUILD_ID,
+    timestamp: new Date().toISOString(),
+    node: process.version,
+    mongoose: mongoose.version,
+    env: {
+      nodeEnv: process.env.NODE_ENV || null,
+      vercel: Boolean(process.env.VERCEL),
+    },
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 
