@@ -7,7 +7,7 @@ const connectDB = require("./config/db");
 const mongoose = require("mongoose");
 
 const app = express();
-const BUILD_ID = "2026-04-23-task-next-fix";
+const BUILD_ID = "2026-04-27-cors-preflight-vercel";
 
 // Middleware
 const defaultAllowedOrigins = [
