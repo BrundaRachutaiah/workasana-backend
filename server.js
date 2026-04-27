@@ -25,15 +25,16 @@ const corsOptions = {
     // Allow non-browser clients (Postman/curl) with no Origin header
     if (!origin) return callback(null, true);
 
-    // In dev, avoid confusing CORS issues during local testing
-    if (process.env.NODE_ENV !== "production") return callback(null, true);
-
+    // ✅ FIXED: Removed NODE_ENV check — it was preventing CORS from working
+    // on Vercel even when the origin was in the allowlist
     const originAllowList =
       allowedOrigins.length > 0 ? allowedOrigins : defaultAllowedOrigins;
 
     if (originAllowList.includes(origin)) return callback(null, true);
 
-    return callback(null, false);
+    // ✅ FIXED: Return a proper error instead of callback(null, false)
+    // which was silently blocking without sending correct CORS headers
+    return callback(new Error(`CORS: origin '${origin}' not allowed`));
   },
   credentials: true,
 };
@@ -42,13 +43,13 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
-app.use("/auth",    require("./routes/authRoutes"));
-app.use("/projects",require("./routes/projectRoutes"));
-app.use("/teams",   require("./routes/teamRoutes"));
-app.use("/tasks",   require("./routes/taskRoutes"));
-app.use("/tags",    require("./routes/tagRoutes"));
-app.use("/report",  require("./routes/reportRoutes"));
-app.use("/users",   require("./routes/userRoutes"));
+app.use("/auth",     require("./routes/authRoutes"));
+app.use("/projects", require("./routes/projectRoutes"));
+app.use("/teams",    require("./routes/teamRoutes"));
+app.use("/tasks",    require("./routes/taskRoutes"));
+app.use("/tags",     require("./routes/tagRoutes"));
+app.use("/report",   require("./routes/reportRoutes"));
+app.use("/users",    require("./routes/userRoutes"));
 
 // Health check
 app.get("/", (req, res) => res.send("Workasana API is running..."));
