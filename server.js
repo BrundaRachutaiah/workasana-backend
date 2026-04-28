@@ -42,7 +42,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// Express 5 + path-to-regexp no longer accepts bare "*" as a route pattern.
+// Use a regex to match all paths for CORS preflight.
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // On serverless (Vercel), avoid crashing the function during cold start.
