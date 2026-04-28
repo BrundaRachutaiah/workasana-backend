@@ -160,9 +160,15 @@ router.get("/", async (req, res) => {
   try {
     const { owner, team, project, status, tags, q, search } = req.query;
 
+    const userId = req.user?.id;
     const filter = {};
 
-    if (owner)   filter.owners  = { $in: [owner] }; // ✅ FIX
+    // Always scope results to the logged-in user (prevents leaking tasks
+    // across accounts if the client forgets to pass filters).
+    if (owner && String(owner) !== String(userId)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    filter.owners = { $in: [userId] };
     if (team)    filter.team    = team;
     if (project) filter.project = project;
     if (status)  filter.status  = status;

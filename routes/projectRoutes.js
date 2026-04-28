@@ -15,7 +15,10 @@ const computeProjectStatus = ({ totalTasks = 0, completedTasks = 0 } = {}) => {
 // POST /projects — Create a project
 router.post("/", async (req, res) => {
   try {
-    const project = await Project.create(req.body);
+    const createdBy = req.user?.id;
+    const { name, description } = req.body || {};
+
+    const project = await Project.create({ name, description, createdBy });
     res.status(201).json({
       ...project.toObject(),
       status: computeProjectStatus({ totalTasks: 0, completedTasks: 0 }),
@@ -30,7 +33,12 @@ router.post("/", async (req, res) => {
 // GET /projects — Get all projects
 router.get("/", async (req, res) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
+    const userId = req.user?.id;
+    const ownedProjectIds = await Task.distinct("project", { owners: userId });
+
+    const projects = await Project.find({
+      $or: [{ createdBy: userId }, { _id: { $in: ownedProjectIds } }],
+    }).sort({ createdAt: -1 });
 
     const projectIds = projects.map((p) => p._id);
     const stats = await Task.aggregate([
@@ -76,8 +84,14 @@ router.get("/", async (req, res) => {
 // GET /projects/:id — Get a single project
 router.get("/:id", async (req, res) => {
   try {
+    const userId = req.user?.id;
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const hasOwnedTask = await Task.exists({ project: project._id, owners: userId });
+    if (String(project.createdBy) !== String(userId) && !hasOwnedTask) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
 
     const [totalTasks, completedTasks] = await Promise.all([
       Task.countDocuments({ project: project._id }),
