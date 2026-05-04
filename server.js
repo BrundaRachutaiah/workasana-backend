@@ -15,6 +15,10 @@ const defaultAllowedOrigins = [
   "https://workasana-frontend-six.vercel.app",
 ];
 
+// Allow Vercel preview deployment URLs for the frontend, e.g.
+// https://workasana-frontend-<hash>-<team>.vercel.app
+const vercelFrontendPreviewOrigin = /^https:\/\/workasana-frontend-[a-z0-9-]+\.vercel\.app$/i;
+
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
   .map((o) => o.trim())
@@ -32,6 +36,7 @@ const corsOptions = {
     );
 
     if (originAllowList.includes(origin)) return callback(null, true);
+    if (vercelFrontendPreviewOrigin.test(origin)) return callback(null, true);
 
     return callback(new Error(`CORS: origin '${origin}' not allowed`));
   },
